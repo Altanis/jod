@@ -2,6 +2,8 @@ import Parser from "./Parser";
 import { Tokens } from "../Const/Tokens";
 import Logger from "../Utils/Logger";
 
+import Number from "../Const/Types/Number";
+
 /** Lexically analyzes code and returns it as a series of tokens. */
 class Lexer {
     /** The main parser which contains other handlers. */
@@ -28,16 +30,15 @@ class Lexer {
     public parse(code: string) {
         const chars = this.chars = code.split("");
         console.log(chars, this.charIdx);
-        while (this.charIdx < chars.length) {
+        while (this.charIdx < chars.length - 1) {
             let char = "";
             for (let i = 0; i < this.lookBack + 1; i++) char += chars[i];
             this.charIdx++;
 
-            const charType = Tokens.get(char);
+            const charType = Tokens.get(char) || this.parser.stack.get(char)?.stringify.type;
             console.log(char, charType, this.charIdx);
-
             /** @ts-ignore */
-            if ([" "].includes(char.at(-1))) Logger.err(`Could not find item ${char.slice(0, 1)}.`);
+            if ([" "].includes(char.at(-1))) Logger.err(`Could not find item ${char.slice(0, 1)}. (${this.line})`);
 
             switch (charType) {
                 case "Newline": this.line++; continue;
@@ -45,10 +46,28 @@ class Lexer {
                     if (chars[this.charIdx] !== " ") continue;
                     else this.charIdx++; // Skip space
 
-                    const name = this.nextToken();
-                    Logger.err("woo found name", name);
+                    console.log(chars[this.charIdx]);
+                    const name = this.nextToken("=").trim();
+                    
+                    if (/\d/.test(name)) Logger.err(`Variable name cannot include a number. (${this.line})`);
+                    if (Tokens.get(name)) Logger.err(`Variable name cannot be a keyword. (${this.line})`);
+
+                    const value = this.parseToken(this.nextToken(";").slice(1).trim());
+
+                    this.parser.stack.set(name, value);
+                    console.log(this.charIdx, chars[this.charIdx]);
 
                     this.lookBack = 0;
+                }
+                case "Function": {
+                    this.nextToken("(");
+                    /** @ts-ignore */
+                    const types = charType.stringify.operands;
+
+                    for (let i = 0; i < types.length; i++) {
+                        const type = types[i];
+                        const value = this.parseToken(this.nextToken(","));                        
+                    }
                 }
                 default: this.lookBack++; continue;
             }
@@ -56,13 +75,18 @@ class Lexer {
     }
 
     /** Gets the next "word" before a space. */
-    private nextToken(): string {
+    private nextToken(splitter: string): string {
         let token = "";
-        while (this.chars[this.charIdx] !== " ") {
+        while (this.chars[this.charIdx] !== splitter) {
             token += this.chars[this.charIdx++];
         }
         
         return token;
+    }
+
+    /** Parses a value. */
+    private parseToken(token: string) {
+        if (!isNaN(+token)) return new Number(+token);
     }
 }
 

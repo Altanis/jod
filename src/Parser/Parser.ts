@@ -1,5 +1,7 @@
 import Lexer from "./Lexer";
 
+import Number from "../Const/Types/Number";
+
 /** Initial parser of the code, handles communication with specialized parsers. */
 class Parser {
     /** The code that the parser is parsing. */
@@ -8,7 +10,7 @@ class Parser {
     private lexer = new Lexer(this);
 
     /** The stack which holds every variable. */
-    private stack = new Map<string, any>();
+    public stack = new Map<string, Number | undefined>();
 
     /** Initial parser of the code. */
     public set(code: string) {
