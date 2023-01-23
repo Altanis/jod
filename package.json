@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "@types/node": "^18.11.18",
+    "chalk": "^4.1.2"
+  },
+  "name": "jod",
+  "version": "1.0.0",
+  "description": "A simple scripting language interpreted by JavaScript.",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "npm run build && node index.js"
+  },
+  "author": "Altanis",
+  "license": "ISC"
+}

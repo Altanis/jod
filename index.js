@@ -1,0 +1,1 @@
+new (require("./dist/Index").default)(process.argv[2]);
